@@ -2,12 +2,12 @@
 #import themes.simple: *
 
 #let combind_logo = {
-  box(image("./logos/zju_horizontal-logo.svg", height: 50pt))
+  box(image("./logos/zju_horizontal-logo.svg", height: 40pt))
   h(10pt)
-  box(rect(height: 50pt, width: 2pt, stroke: 0pt, fill: black))
+  box(rect(height: 40pt, width: 2pt, stroke: 0pt, fill: black))
   h(10pt)
   box(pad(top: 5pt, bottom: 5pt,
-    image("./logos/FICTION-logo.svg", height:40pt)))
+    image("./logos/FICTION-logo.svg", height:30pt)))
 }
 
 #let seminar(
