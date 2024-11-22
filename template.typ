@@ -16,9 +16,13 @@
   authors: (),
   date: none,
   outline_: true,
-  body) = {
+  body
+) = {
 
   set document(author: authors.map(a => a.name), title: title)
+
+  show heading.where(level: 2): []
+
   set text(font: "Libertinus Serif", lang: "en")
   set par(justify: true)
   set page(background: place(right + top,
@@ -27,10 +31,13 @@
       combind_logo
     }))
 
+  show outline: set heading(level: 2)
+  show bibliography: set heading(level: 2)
   show link: set text(fill: blue)
+  set cite(form: "prose")
 
   show: simple-theme.with(
-    aspect-ratio: "16-9",
+    aspect-ratio: "4-3",
     footer: [Open Source Software /
       #date / Zhejiang University])
   
@@ -64,10 +71,10 @@
   ]
 
   // the outline slide
-  if outline_ [
-    #outline(title: [], indent: 1em, fill: [],
+  if outline_ {
+    outline(indent: 1em, fill: [],
       target: heading.where(level: 2))
-    ]
+  }
 
   // for the body
   body
