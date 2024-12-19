@@ -35,6 +35,8 @@
   show bibliography: set heading(level: 2)
   show link: set text(fill: blue)
 
+  show figure: set align(center)
+
   show: simple-theme.with(
     aspect-ratio: "4-3",
     footer: [FICTION Seminar /
@@ -71,8 +73,11 @@
 
   // the outline slide
   if outline_ {
-    outline(indent: 1em, fill: [], title: "Outline",
-      target: heading.where(level: 2))
+    slide[
+      #set align(horizon)
+      #outline(indent: 1em, fill: [], title: "Outline",
+        target: heading.where(level: 2))
+    ]
   }
 
   // for the body
