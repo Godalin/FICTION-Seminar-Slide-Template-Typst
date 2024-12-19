@@ -34,11 +34,10 @@
   show outline: set heading(level: 2)
   show bibliography: set heading(level: 2)
   show link: set text(fill: blue)
-  set cite(form: "prose")
 
   show: simple-theme.with(
     aspect-ratio: "4-3",
-    footer: [Open Source Software /
+    footer: [FICTION Seminar /
       #date / Zhejiang University])
   
   // Title row.
@@ -72,7 +71,7 @@
 
   // the outline slide
   if outline_ {
-    outline(indent: 1em, fill: [],
+    outline(indent: 1em, fill: [], title: "Outline",
       target: heading.where(level: 2))
   }
 
