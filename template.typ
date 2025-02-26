@@ -1,5 +1,7 @@
-#import "@preview/touying:0.5.3": *
+#import "@preview/touying:0.6.0": *
 #import themes.simple: *
+
+#import "@preview/ctheorems:1.1.3": *
 
 #let combind_logo = {
   box(image("./logos/zju_horizontal-logo.svg", height: 40pt))
@@ -82,4 +84,38 @@
 
   // for the body
   body
+}
+
+// #let basebox = thmbox.with(
+//   inset: (x: 10pt, y: 10pt),
+//   base: none, stroke: 1pt,
+//   titlefmt: smallcaps
+// )
+
+// // theorem functions
+// #let theorem = basebox(
+//   "theorem", "Theorem", fill: blue.lighten(70%))
+
+// #let corollary = thmplain(
+//   "corollary",
+//   "Corollary",
+//   base: "theorem",
+//   titlefmt: strong
+// )
+
+// #let definition = basebox(
+//   "definition", "Definition", fill: green.lighten(70%))
+
+// #let example = basebox(
+//   "example", "Example").with(numbering: none)
+
+// #let proof = thmproof("proof", "Proof")
+
+
+// theorem functions
+
+#let citation(lab, supplement: none) = {
+  set text(size: 14pt, fill: gray)
+  cite(lab, form: "full", style: "springer-basic",
+    supplement: supplement)
 }
