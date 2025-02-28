@@ -48,7 +48,10 @@
   show: simple-theme.with(
     aspect-ratio: "4-3",
     footer: [FICTION Seminar /
-      #date / Zhejiang University]
+      #date / Zhejiang University],
+
+    // freeze the theorem counter
+    config-common(frozen-counters: (theorem-counter,)),
   )
 
   // theorems
