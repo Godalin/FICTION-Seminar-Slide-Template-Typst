@@ -1,9 +1,13 @@
-#import "@preview/touying:0.6.0": *
+// main theme
+#import "@preview/touying:0.6.1": *
 #import themes.simple: *
 
-#import "@preview/ctheorems:1.1.3": *
+// theorems
+#import "@preview/theorion:0.3.2": *
+#import cosmos.fancy: *
 
-#let combind_logo = {
+// the logo
+#let combined_logo = {
   box(image("./logos/zju_horizontal-logo.svg", height: 40pt))
   h(10pt)
   box(rect(height: 40pt, width: 2pt, stroke: 0pt, fill: black))
@@ -27,10 +31,12 @@
 
   set text(font: "Libertinus Serif", lang: "en")
   set par(justify: true)
+
+  // set the background
   set page(background: place(right + top,
     dx: -10pt, dy: 10pt,
     context if here().page() != 1 {
-      combind_logo
+      combined_logo
     }))
 
   show outline: set heading(level: 2)
@@ -42,8 +48,12 @@
   show: simple-theme.with(
     aspect-ratio: "4-3",
     footer: [FICTION Seminar /
-      #date / Zhejiang University])
-  
+      #date / Zhejiang University]
+  )
+
+  // theorems
+  show: show-theorion
+
   // Title row.
   title-slide[
     #v(2fr)
@@ -68,7 +78,7 @@
 
     #v(1fr)
 
-    #combind_logo
+    #combined_logo
 
     #v(1fr)
   ]
@@ -86,34 +96,9 @@
   body
 }
 
-// #let basebox = thmbox.with(
-//   inset: (x: 10pt, y: 10pt),
-//   base: none, stroke: 1pt,
-//   titlefmt: smallcaps
-// )
-
-// // theorem functions
-// #let theorem = basebox(
-//   "theorem", "Theorem", fill: blue.lighten(70%))
-
-// #let corollary = thmplain(
-//   "corollary",
-//   "Corollary",
-//   base: "theorem",
-//   titlefmt: strong
-// )
-
-// #let definition = basebox(
-//   "definition", "Definition", fill: green.lighten(70%))
-
-// #let example = basebox(
-//   "example", "Example").with(numbering: none)
-
-// #let proof = thmproof("proof", "Proof")
 
 
 // theorem functions
-
 #let citation(lab, supplement: none) = {
   set text(size: 14pt, fill: gray)
   cite(lab, form: "full", style: "springer-basic",
