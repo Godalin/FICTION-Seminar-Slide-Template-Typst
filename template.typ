@@ -90,7 +90,7 @@
   if outline_ {
     slide[
       #set align(horizon)
-      #outline(indent: 1em, fill: [], title: "Outline",
+      #outline(indent: 1em, title: "Outline",
         target: heading.where(level: 2))
     ]
   }
