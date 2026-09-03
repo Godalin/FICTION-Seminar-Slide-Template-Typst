@@ -22,6 +22,7 @@
   authors: (),
   date: none,
   outline_: true,
+  content-valign: horizon,
   body
 ) = {
 
@@ -29,15 +30,8 @@
 
   show heading.where(level: 2): []
 
-  set text(font: "Libertinus Serif", lang: "en")
+  set text(font: ("Libertinus Serif", "Songti SC"), lang: "zh")
   set par(justify: true)
-
-  // set the background
-  set page(background: place(right + top,
-    dx: -10pt, dy: 10pt,
-    context if here().page() != 1 {
-      combined_logo
-    }))
 
   show outline: set heading(level: 2)
   show bibliography: set heading(level: 2)
@@ -45,13 +39,40 @@
 
   show figure: set align(center)
 
+  // Keep regular slide bodies visually balanced. Dense decks can opt out with
+  // `content-valign: top` when calling `seminar`.
+  let seminar-slide(
+    config: (:),
+    repeat: auto,
+    setting: body => body,
+    composer: auto,
+    ..bodies,
+  ) = slide(
+    config: config,
+    repeat: repeat,
+    setting: body => setting(align(content-valign, body)),
+    composer: composer,
+    ..bodies,
+  )
+
   show: simple-theme.with(
     aspect-ratio: "4-3",
+    // Title and logo share a header row, preventing overlap. The padding also
+    // moves both away from the top edge.
+    header: self => pad(top: 8pt)[
+      #utils.display-current-heading(
+        setting: utils.fit-to-width.with(grow: false, 100%),
+        level: 1,
+        depth: self.slide-level,
+      )
+    ],
+    header-right: pad(top: 8pt)[#combined_logo],
     footer: [FICTION Seminar /
       #date / Zhejiang University],
 
     // freeze the theorem counter
     config-common(frozen-counters: (theorem-counter,)),
+    config-common(slide-fn: seminar-slide),
   )
 
   // theorems
