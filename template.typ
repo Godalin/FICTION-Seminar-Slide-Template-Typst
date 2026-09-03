@@ -33,14 +33,20 @@
   set text(font: ("Libertinus Serif", "Songti SC"), lang: "zh")
   set par(justify: true)
 
+  // Keep the seminar logo at its original hand-tuned page position.
+  set page(background: place(right + top,
+    dx: -10pt, dy: 10pt,
+    context if here().page() != 1 {
+      combined_logo
+    }))
+
   show outline: set heading(level: 2)
   show bibliography: set heading(level: 2)
   show link: set text(fill: blue)
 
   show figure: set align(center)
 
-  // Keep regular slide bodies visually balanced. Dense decks can opt out with
-  // `content-valign: top` when calling `seminar`.
+  // Slide titles live in the page header; only the body is vertically aligned.
   let seminar-slide(
     config: (:),
     repeat: auto,
@@ -57,22 +63,24 @@
 
   show: simple-theme.with(
     aspect-ratio: "4-3",
-    // Title and logo share a header row, preventing overlap. The padding also
-    // moves both away from the top edge.
-    header: self => pad(top: 8pt)[
+    // Constrain header text on the left while preserving the original logo
+    // placement on the right.
+    header: self => block(width: 68%)[
+      #set text(size: 1.9em, fill: black, weight: "bold")
       #utils.display-current-heading(
         setting: utils.fit-to-width.with(grow: false, 100%),
-        level: 1,
+        level: 2,
         depth: self.slide-level,
       )
     ],
-    header-right: pad(top: 8pt)[#combined_logo],
+    header-right: none,
     footer: [FICTION Seminar /
       #date / Zhejiang University],
 
     // freeze the theorem counter
     config-common(frozen-counters: (theorem-counter,)),
     config-common(slide-fn: seminar-slide),
+    subslide-preamble: none,
   )
 
   // theorems
