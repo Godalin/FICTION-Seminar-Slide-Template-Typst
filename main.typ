@@ -9,6 +9,7 @@
 #let good(body) = text(fill: green, weight: "bold", body)
 #let bad(body) = text(fill: red, weight: "bold", body)
 #let mono(body) = text(font: "DejaVu Sans Mono", size: 0.88em, body)
+#let kleisli-bind = math.op(text(font: "DejaVu Sans Mono", size: 0.82em, [>>=]))
 #let panel(body, fill: pale, stroke: purple) = block(
   width: 100%, inset: 13pt, radius: 5pt,
   fill: fill, stroke: (paint: stroke, thickness: 0.8pt), body)
@@ -294,16 +295,16 @@ $
 定义 $A_n$ 解释一个 stable target：
 
 $
-  A_n("Stable"(a)) &= delta_a \
-  A_0("Internal"(s)) &= 0 \
-  A_(n+1)("Internal"(s)) &= K(s) "bind" A_n
+  A_n ("Stable"(a)) &= delta_a \
+  A_0 ("Internal"(s)) &= 0 \
+  A_(n+1) ("Internal"(s)) &= K(s) #kleisli-bind A_n
 $
 
 #v(12pt)
 
 从状态 $s$ 出发的第 $n$ 个 hitting approximant：
 
-#align(center)[$ H_n(s) = K(s) "bind" A_n $]
+#align(center)[$ H_n (s) = K(s) #kleisli-bind A_n $]
 
 #v(12pt)
 
@@ -318,12 +319,12 @@ $
 #set text(size: 21pt)
 
 #align(center)[
-$ H(s) = sup_(n in NN) H_n(s) $
+$ H(s) = sup_(n in NN) H_n (s) $
 ]
 
 #v(14pt)
 
-- $H_n(s) <= H_(n+1)(s)$：看到的稳定质量单调增加
+- $H_n (s) <= H_(n+1) (s)$：看到的稳定质量单调增加
 - `stable_hitting s out`：`out` 是这条链的 least upper bound
 - `stable_hitting_ast s out`：再要求 $"mass"("out")=1$
 
@@ -348,7 +349,7 @@ $ H(s) = sup_(n in NN) H_n(s) $
 #panel[
 $
  "stable_hitting"(K,s,"out")
-  &:= "sem_lub"((n mapsto H_n(s)), "out") \
+  &:= "sem_lub"((n mapsto H_n (s)), "out") \
  "stable_hitting_ast"(K,s,"out")
   &:= "stable_hitting"(K,s,"out") and "sem_total"("out")
 $
@@ -497,16 +498,16 @@ $
 #panel[
 $
  "match"_X(s_1,s_2) :=
- &(forall o_1, H_1(s_1,o_1) arrow
-   exists o_2, H_2(s_2,o_2) and o_1 overline("AR"(X)) o_2) \
- &and (forall o_2, H_2(s_2,o_2) arrow
-   exists o_1, H_1(s_1,o_1) and o_1 overline("AR"(X)) o_2)
+ &(forall o_1, H_1 (s_1,o_1) arrow
+   exists o_2, H_2 (s_2,o_2) and o_1 overline("AR"(X)) o_2) \
+ &and (forall o_2, H_2 (s_2,o_2) arrow
+   exists o_1, H_1 (s_1,o_1) and o_1 overline("AR"(X)) o_2)
 $
 ]
 
 #v(7pt)
 
-其中 $H_i(s,o)$ 就是 `stable_hitting kernelᵢ s o`，横线上标表示
+其中 $H_i (s,o)$ 就是 `stable_hitting kernelᵢ s o`，横线上标表示
 `sem_lift`。两个方向都写入定义，因此它直接支持 heterogeneous kernels。
 
 #v(7pt)
@@ -674,7 +675,7 @@ $
 $
  &t_1 approx_p[RR] t_2 \
  &and (forall r_1 r_2, RR(r_1,r_2) arrow k_1(r_1) approx_p k_2(r_2)) \
- &arrow "bind"(t_1,k_1) approx_p "bind"(t_2,k_2).
+ &arrow t_1 #kleisli-bind k_1 approx_p t_2 #kleisli-bind k_2.
 $
 ]
 
@@ -773,7 +774,7 @@ up-to theorem 把 conclusion 中的 `sim` 换成 `clo sim`，但额外要求：
 #panel[
 `MixedMeasure MN MF` 只有一个操作：
 
-$ "mixed_bind" : M_N(A) arrow (A arrow M_F(B)) arrow M_F(B). $
+$ "mixed_bind" : M_N (A) arrow (A arrow M_F (B)) arrow M_F (B). $
 ]
 
 #v(5pt)
