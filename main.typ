@@ -130,8 +130,8 @@
 
 #align(center)[
 $
-  "ptreeF"(E,M,R,T) ::= "RetF"(r) mid "TauF"(t)
-    mid "VisF"(e,k) mid "ProbF"(mu,k)
+  "ptreeF"(E,M,R,T) ::= "RetF"(r) | "TauF"(t)
+    | "VisF"(e,k) | "ProbF"(mu,k)
 $
 ]
 
@@ -231,7 +231,7 @@ generic 层只规定目标类型：
 
 #align(center)[
 $
-  "stable_target"(S,A) ::= "SHStable"(a) mid "SHInternal"(s)
+  "stable_target"(S,A) ::= "SHStable"(a) | "SHInternal"(s)
 $
 ]
 
@@ -265,7 +265,7 @@ measure $M_F$ 之间的 `mixed_bind`。kernel 不识别 `Bind` 或 `Iter`。
 
 #align(center)[
 $
-  "Head"(E,R) ::= "FHRet"(r) mid "FHVis"(e,k)
+  "Head"(E,R) ::= "FHRet"(r) | "FHVis"(e,k)
 $
 ]
 
@@ -1152,7 +1152,7 @@ $ tau = ["Request"; "Reply"("true")] $
 
 #theorem(title: [`von_neumann_request_true_reply_trace_probability`])[
 #align(center)[
-  #text(size: 25pt)[$ Pr_t["von_neumann_service" mid tau] = 1/2 $]
+  #text(size: 25pt)[$ Pr_t["von_neumann_service" | tau] = 1/2 $]
 ]
 ]
 
