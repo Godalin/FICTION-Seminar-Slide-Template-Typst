@@ -22,7 +22,6 @@
   authors: (),
   date: none,
   outline_: true,
-  content-valign: horizon,
   body
 ) = {
 
@@ -46,41 +45,21 @@
 
   show figure: set align(center)
 
-  // Slide titles live in the page header; only the body is vertically aligned.
-  let seminar-slide(
-    config: (:),
-    repeat: auto,
-    setting: body => body,
-    composer: auto,
-    ..bodies,
-  ) = slide(
-    config: config,
-    repeat: repeat,
-    setting: body => setting(align(content-valign, body)),
-    composer: composer,
-    ..bodies,
-  )
-
   show: simple-theme.with(
     aspect-ratio: "4-3",
-    // Constrain header text on the left while preserving the original logo
-    // placement on the right.
-    header: self => block(width: 68%)[
-      #set text(size: 1.9em, fill: black, weight: "bold")
-      #utils.display-current-heading(
-        setting: utils.fit-to-width.with(grow: false, 100%),
-        level: 2,
-        depth: self.slide-level,
-      )
-    ],
-    header-right: none,
     footer: [FICTION Seminar /
       #date / Zhejiang University],
 
     // freeze the theorem counter
     config-common(frozen-counters: (theorem-counter,)),
-    config-common(slide-fn: seminar-slide),
-    subslide-preamble: none,
+    // Preserve Touying's original title/body structure and title typography;
+    // only begin the page content below the fixed logo.
+    config-page(margin: (
+      top: 4.3em,
+      right: 2em,
+      bottom: 2em,
+      left: 2em,
+    )),
   )
 
   // theorems
