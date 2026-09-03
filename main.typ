@@ -126,25 +126,32 @@
 
 == PTree 是带原生概率节点的 interaction tree
 
-#set text(size: 22pt)
+#set text(size: 20pt)
 
 #align(center)[
 $
-  "PTree" ::= "Ret"(r)
-    mid "Tau"(t)
-    mid "Vis"(e,k)
-    mid "Prob"(mu,k)
+  "ptreeF"(E,M,R,T) ::= "RetF"(r) mid "TauF"(t)
+    mid "VisF"(e,k) mid "ProbF"(mu,k)
 $
 ]
 
-#v(18pt)
+#v(8pt)
+
+#panel[
+  #mono[`CoInductive ptree := go { _observe : ptreeF ptree }.`]
+
+  一次 `observe` 只展开一层；`TauF`、`VisF` 和 `ProbF` 的后继仍是
+  `ptree`，所以程序可无限展开。
+]
+
+#v(8pt)
 
 - `Ret r`：返回结果
 - `Tau t`：确定性的内部步
 - `Vis e k`：发出外部事件，等待环境给出 $x$，继续 $k(x)$
 - `Prob μ k`：内部采样 $x arrow.r.long mu$，继续 $k(x)$
 
-#v(10pt)
+#v(5pt)
 
 #panel[
   `Tau` 和 `Prob` 都是内部计算；#key[只有 `Ret` 与 `Vis` 是稳定观察]。
@@ -152,6 +159,37 @@ $
 
 #src[
 - `../theories/Core/PTreeDefinition.v`, `ptreeF` and `ptree`.
+]
+
+== 概率参数不是固定的枚举分布
+
+#set text(size: 18pt)
+
+源码中的 `M : Type → Type` 只出现在 `ProbF`：
+
+#align(center)[
+$ "ProbF" : forall X, M(X) arrow (X arrow "ptree") arrow "ptreeF" $
+]
+
+#v(8pt)
+
+语义层通过 `SemanticMeasure M` 只要求五个操作：
+
+#panel[
+  #mono[`sem_ret`]：Dirac measure　　#mono[`sem_bind`]：Kleisli composition
+
+  #mono[`sem_eq`]：语义相等　　　　#mono[`sem_ae`]：几乎处处性质
+
+  #mono[`sem_lift R μ ν`]：用关系 `R` coupling 两个 measure
+]
+
+#v(8pt)
+
+具体代数定律不塞进结构本身，而由 `SemanticMeasureCoreLaws`、
+`SemanticMeasureBindLaws`、AE/omega capability classes 分别提供。
+
+#src[
+- `../theories/Prob/TwoLevelMeasure.v`, `SemanticMeasure` and law classes.
 ]
 
 == 语法表示不应决定行为意义
@@ -187,34 +225,34 @@ $
 
 == 第一步：把语法降成 primitive kernel
 
-#set text(size: 20pt)
+#set text(size: 18pt)
 
-对任意状态空间 $S$，primitive kernel 只产生两类目标：
+generic 层只规定目标类型：
 
 #align(center)[
 $
-  K : S arrow "MF"("Stable"(A) + "Internal"(S))
+  "stable_target"(S,A) ::= "SHStable"(a) mid "SHInternal"(s)
 $
 ]
 
-#v(15pt)
+#v(5pt)
 
-#grid(columns: (1fr, 1fr), gutter: 16pt,
-  panel[
-    #key[`SHStable out`]
+PTree 将一次 `observe` 实例化为下面四个 kernel 方程：
 
-    已经到达可观察的 stable head。
-  ],
-  panel[
-    #key[`SHInternal state`]
+#panel[
+$
+ K("RetF" r) &= delta_("Stable"("FHRet" r)) \
+ K("VisF" e k) &= delta_("Stable"("FHVis" e k)) \
+ K("TauF" t) &= delta_("Internal"("observe" t)) \
+ K("ProbF" mu k) &= "mixed_bind"(mu, x mapsto
+   delta_("Internal"("observe"(k(x)))))
+$
+]
 
-    仍需继续执行 primitive kernel。
-  ],
-)
+#v(5pt)
 
-#v(12pt)
-
-这个定义完全不知道 `Bind`、`Iter` 或某个具体 PTree 证明规则。
+前三个方程是 Dirac；`ProbF` 才调用 node measure $M_N$ 与 behavior
+measure $M_F$ 之间的 `mixed_bind`。kernel 不识别 `Bind` 或 `Iter`。
 
 #src[
 - `../theories/Eq/PrimitiveStableHitting.v`, `stable_target`.
@@ -299,6 +337,41 @@ $ H(s) = sup_(n in NN) H_n(s) $
 #src[
 - `../theories/Eq/PrimitiveStableHitting.v`, stable-hitting limits.
 - `../theories/Prob/MeasureIteration.v`.
+]
+
+== Stable hitting 的接口不是“取一个随意极限”
+
+#set text(size: 18pt)
+
+项目定义直接使用 backend 的 least-upper-bound judgment：
+
+#panel[
+$
+ "stable_hitting"(K,s,"out")
+  &:= "sem_lub"((n mapsto H_n(s)), "out") \
+ "stable_hitting_ast"(K,s,"out")
+  &:= "stable_hitting"(K,s,"out") and "sem_total"("out")
+$
+]
+
+#v(8pt)
+
+在 `SemanticMeasureOrderLaws + SemanticOmegaLaws` 下证明：
+
+#theorem(title: [Existence / uniqueness])[
+  `stable_hitting_exists`：$forall s, exists "out", H(s)="out"$。
+
+  `stable_hitting_unique`：若 $H(s)="out"_1$ 且 $H(s)="out"_2$，
+  则 $"sem_eq"("out"_1,"out"_2)$。
+]
+
+#v(6pt)
+
+因此后续互模拟可以量化任意 hitting witness；证明结果不依赖某个
+chosen representative。
+
+#src[
+- `../theories/Eq/PrimitiveStableHitting.v`, `stable_hitting`, existence and uniqueness.
 ]
 
 == 发散不是被“弱化”掉，而是成为缺失质量
@@ -417,33 +490,75 @@ $
 
 == 主关系 = coupling generator 的最大不动点
 
-#set text(size: 20pt)
+#set text(size: 18pt)
 
-候选关系 $X$ 的一步 generator：
+先定义候选关系 $X$ 对一对状态的完整行为匹配：
 
-#align(center)[
+#panel[
 $
-  Phi(X)(t,u)
-  := H(t) "  sem_lift"("HeadRel"(RR,X)) H(u)
+ "match"_X(s_1,s_2) :=
+ &(forall o_1, H_1(s_1,o_1) arrow
+   exists o_2, H_2(s_2,o_2) and o_1 overline("AR"(X)) o_2) \
+ &and (forall o_2, H_2(s_2,o_2) arrow
+   exists o_1, H_1(s_1,o_1) and o_1 overline("AR"(X)) o_2)
 $
 ]
 
-实际定义双向匹配任意 stable-hitting witness；hitting uniqueness 使其等价于上式直觉。
+#v(7pt)
 
-#v(12pt)
+其中 $H_i(s,o)$ 就是 `stable_hitting kernelᵢ s o`，横线上标表示
+`sem_lift`。两个方向都写入定义，因此它直接支持 heterogeneous kernels。
+
+#v(7pt)
 
 #align(center)[
 #panel[
-  $ t approx_p[RR] u quad := quad (t,u) in nu X. Phi(X) $
+  $ "stable_hitting_bisim" := nu X. "match"_X $
 ]
 ]
 
-#v(10pt)
+#v(5pt)
 
-generator 中没有 `Tau`、`Prob`、`Bind`、`Iter`、AST 或 frontier constructor。
+`AR` 只需对 $X$ 单调；generator 中没有 `Tau`、`Prob`、`Bind`、
+`Iter`、AST 或 frontier constructor。
 
 #src[
 - `../theories/Eq/ProbabilisticEutt.v`, `stable_hitting_match`, `stable_hitting_bisim`, and `probabilistic_eutt`.
+]
+
+== `probabilistic_eutt` 只是 generic gfp 的 PTree 实例
+
+#set text(size: 18pt)
+
+PTree 状态是 `ptree'`，observable relation 取：
+
+#panel[
+$
+ "ptree_stable_head_rel"(X)
+ := "frontier_head_rel"(RR,
+   (t_1,t_2) mapsto X("observe" t_1,"observe" t_2))
+$
+]
+
+#v(7pt)
+
+然后把 $K$、stable head 与上述 relation 代入 generic 定义：
+
+#panel[
+$
+ "probabilistic_eutt_state" &:=
+   "stable_hitting_bisim"(K,K,"ptree_stable_head_rel") \
+ "probabilistic_eutt"(RR,t_1,t_2) &:=
+   "probabilistic_eutt_state"("observe" t_1,"observe" t_2)
+$
+]
+
+#v(6pt)
+
+记号 `t₁ ≈ₚ[RR] t₂` 展开为第二行；`t₁ ≈ₚ t₂` 再令 `RR = eq`。
+
+#src[
+- `../theories/Eq/ProbabilisticEutt.v`, `ptree_stable_head_rel`, `probabilistic_eutt_state`, and `probabilistic_eutt`.
 ]
 
 == 它不是把迁移模型照抄成一套规则
@@ -482,26 +597,33 @@ generator 中没有 `Tau`、`Prob`、`Bind`、`Iter`、AST 或 frontier construc
 
 == 等价关系的难点集中在 transitivity
 
-#set text(size: 20pt)
+#set text(size: 18pt)
 
-若 $t_1 approx_p t_2$ 且 $t_2 approx_p t_3$：
-
-#v(8pt)
-
-1. 取两组 stable-hitting coupling
-2. 用共同的中间边缘分布进行 coupling gluing
-3. support 上递归组合 continuation relation
-4. 用 hitting uniqueness 消除 witness 选择差异
-
-#v(12pt)
-
-#theorem[
-  `probabilistic_eutt` 已注册为 `Equivalence`：reflexive、symmetric、transitive。
+#theorem(title: [`probabilistic_eutt_trans`])[
+$
+ forall t_1 t_2 t_3,
+ (t_1 approx_p t_2) arrow (t_2 approx_p t_3) arrow (t_1 approx_p t_3).
+$
 ]
 
-#v(8pt)
+#v(6pt)
 
-MathComp backend 把 gluing 明确保留为 `MathCompCouplingGluing` capability。
+证明展开一次 gfp 后做四件事：
+
+1. 为 $t_1,t_2$ 与 $t_2,t_3$ 取两组完整 hitting couplings
+2. 用 hitting uniqueness 把两个 $t_2$ witness 对齐
+3. 对共同中间边缘执行 coupling gluing
+4. 对 support 上的 `FHRet/FHVis` relation 递归做关系组合
+
+#v(5pt)
+
+最终实例：
+
+#mono[`Global Instance probabilistic_eutt_equivalence : Equivalence probabilistic_eutt.`]
+
+#v(4pt)
+
+MathComp backend 把第 3 步明确暴露为 `MathCompCouplingGluing` capability。
 
 #src[
 - `../theories/Eq/ProbabilisticEutt.v`, equivalence proofs.
@@ -511,23 +633,62 @@ MathComp backend 把 gluing 明确保留为 `MathCompCouplingGluing` capability�
 
 == 熟悉的程序方程都是 derived laws
 
-#set text(size: 20pt)
+#set text(size: 18pt)
 
+#theorem(title: [Silent / return / visible laws])[
 $
-  "Tau" t &approx_p t \
-  "Prob" mu k_1 &approx_p "Prob" nu k_2
-    && "if " mu " sem_lift"(R) nu " and continuations agree AE" \
-  t_1 "bind" k_1 &approx_p t_2 "bind" k_2
-    && "if " t_1 approx_p t_2 " and " k_1 approx_p k_2
+ "probabilistic_eutt_tau_l":& quad "Tau"(t) approx_p t \
+ "probabilistic_eutt_ret":& quad RR(r_1,r_2) arrow
+   "Ret"(r_1) approx_p[RR] "Ret"(r_2) \
+ "probabilistic_eutt_vis":& quad
+   (forall x, k_1(x) approx_p[RR] k_2(x)) arrow
+   "Vis"(e,k_1) approx_p[RR] "Vis"(e,k_2)
 $
+]
 
-#v(14pt)
+#v(7pt)
 
-此外还有：
+#theorem(title: [Sampling congruence])[
+$
+ mu_1 overline("XR") mu_2 quad and quad
+ (forall x_1 x_2, "XR"(x_1,x_2) arrow k_1(x_1) approx_p k_2(x_2))
+ \
+ arrow "Prob"(mu_1,k_1) approx_p "Prob"(mu_2,k_2).
+$
+]
 
-- monad laws、`fmap`、`setoid_rewrite`
-- eventful `iter` fusion / naturality / codiagonal
-- event translation 与受条件约束的 effectful `interp`
+#v(5pt)
+
+这些都是先证明相应完整 hitting measures 可 coupling，再用 `fold` 进入 gfp；
+它们不是互模拟定义的 constructor。
+
+#src[
+- `../theories/Eq/ProbabilisticEutt.v`, Tau, Ret, Vis, and Prob congruence theorems.
+]
+
+== Bind congruence 展开了返回后的行为
+
+#set text(size: 18pt)
+
+#theorem(title: [`probabilistic_eutt_bind`])[
+$
+ &t_1 approx_p[RR] t_2 \
+ &and (forall r_1 r_2, RR(r_1,r_2) arrow k_1(r_1) approx_p k_2(r_2)) \
+ &arrow "bind"(t_1,k_1) approx_p "bind"(t_2,k_2).
+$
+]
+
+#v(8pt)
+
+关键证明对象 `bind_bisim_candidate` 包含两种状态：
+
+- 已经属于 `probabilistic_eutt_state` 的 pair
+- 一对相关 source 分别 bind 一对逐点相关 continuation 后的 pair
+
+#v(6pt)
+
+`stable_hitting_weak_bind` 用 global/diagonal fuel cofinality 把 source hitting
+与 continuation hitting 组合；随后 `sem_lift_bind` 组合 couplings。
 
 #src[
 - `../theories/Eq/ProbabilisticEutt.v`.
@@ -538,28 +699,33 @@ $
 
 == 共归纳证明只需展示一个 post-fixed candidate
 
-#set text(size: 20pt)
+#set text(size: 18pt)
 
-#align(center)[
+#theorem(title: [`probabilistic_eutt_coinduction`])[
+给定候选关系 `sim`。若
 $
-  X subset.eq Phi(X)
-  quad arrow.r.double.long quad
-  X subset.eq nu Phi = approx_p
+ forall s_1 s_2,
+ "sim"(s_1,s_2) arrow "stable_hitting_match"("sim",s_1,s_2),
+$
+则对任意 trees：
+$
+ "sim"("observe" t_1,"observe" t_2) arrow t_1 approx_p[RR] t_2.
 $
 ]
 
-#v(15pt)
+#v(7pt)
 
-在 Rocq 中由 `coq-coinduction` 提供 greatest-fixed-point proof principle：
+这正是 $X subset.eq Phi(X) arrow X subset.eq nu Phi$ 的 Rocq 版本；
+`coq-coinduction` 只提供 greatest-fixed-point principle，不改变 generator。
 
-#panel[
-  对每个 $(t,u) in X$，证明两侧完整 stable-hitting limits 可由
-  `HeadRel(RR, X)` coupling，即可推出 $t approx_p u$。
-]
+#v(7pt)
 
-#v(10pt)
+up-to theorem 把 conclusion 中的 `sim` 换成 `clo sim`，但额外要求：
 
-up-to-`≈ₚ` 与 up-to-bind 进一步减少重复展开，但必须单独证明 closure compatibility，避免循环论证。
+- `sim ⊆ clo sim`
+- 若 `sim` progress 到 `clo sim`，则整个 `clo sim` 也 progress
+
+这条 compatibility premise 阻止用尚未证明的 bind congruence 循环证明自身。
 
 #src[
 - `../theories/Eq/ProbabilisticEutt.v`, `stable_hitting_bisim_coinduction` and up-to closure.
@@ -592,7 +758,7 @@ up-to-`≈ₚ` 与 up-to-bind 进一步减少重复展开，但必须单独证�
 
 == 为什么需要两级测度，而不是一个 M
 
-#set text(size: 20pt)
+#set text(size: 18pt)
 
 #align(center)[
   #flow-node[*Node measure*　$M_N$：单个 `Prob` 节点可直接采样]
@@ -602,16 +768,59 @@ up-to-`≈ₚ` 与 up-to-bind 进一步减少重复展开，但必须单独证�
   #flow-node[*Behavior measure*　$M_F$：承载 $omega$ 极限与 stable hitting]
 ]
 
-#v(12pt)
+#v(5pt)
 
-- $M_N$ 只需表达原始 sampler
-- $M_F = "FreeOmega"(M_N)$ 补足无界行为所需的链极限
-- 高级定理依赖 capability classes，而不依赖 Enum 或实数表示
+#panel[
+`MixedMeasure MN MF` 只有一个操作：
+
+$ "mixed_bind" : M_N(A) arrow (A arrow M_F(B)) arrow M_F(B). $
+]
+
+#v(5pt)
+
+- $M_N$ 只需表达 `Prob μ k` 中存储的原始 sampler
+- $M_F = "FreeOmega"(M_N)$ 承载 `sem_zero`、`sem_lub` 与 hitting limit
 
 #src[
 - `../theories/Prob/TwoLevelMeasure.v`.
 - `../theories/Prob/FreeOmegaMeasure.v`.
 - `../THEORY_STATUS.md`, backend capability profiles.
+]
+
+== `mixed_lift_bind` 是两级语义的关系桥梁
+
+#set text(size: 18pt)
+
+#theorem(title: [`MixedMeasureLaws.mixed_lift_bind`])[
+若
+$
+ mu_1 overline(R) mu_2
+ quad "且" quad
+ forall x y, R(x,y) arrow f_1(x) overline(T) f_2(y),
+$
+则
+$
+ "mixed_bind"(mu_1,f_1) overline(T)
+ "mixed_bind"(mu_2,f_2).
+$
+]
+
+#v(8pt)
+
+它在 `probabilistic_eutt_prob` 中正好连接两层：
+
+1. node 层 coupling 配对 `Prob` 的采样值
+2. 每对相关值的 continuation 先得到 behavior-level hitting coupling
+3. `mixed_lift_bind` 合成为整个 `Prob` 节点的 behavior coupling
+
+#v(7pt)
+
+这解释了为什么只用一个普通 monad interface 不够：关系证明必须跨越
+$M_N$ 与 $M_F$。
+
+#src[
+- `../theories/Prob/TwoLevelMeasure.v`, `MixedMeasureLaws`.
+- `../theories/Eq/ProbabilisticEutt.v`, `probabilistic_eutt_prob`.
 ]
 
 == Backend：共享维护中的 behavior profile
@@ -691,29 +900,32 @@ $
 
 == 终点是行为等价，而非同分布
 
-#set text(size: 21pt)
+#set text(size: 18pt)
 
-#align(center)[
+#theorem(title: [`probabilistic_eutt_von_neumann_raw_direct`])[
 $
-  "von_neumann_third"
-  approx_p
-  "direct_fair"
+ @"probabilistic_eutt"("vnE", "Enum", "FreeOmega Enum", "eq",
+   "von_neumann_third", "direct_fair").
 $
+
+省略的 typeclass 参数由 Enum node measure、FreeOmega behavior measure
+及其 core/omega/mixed instances填充。
 ]
 
-#v(16pt)
+#v(7pt)
 
 证明分为三层：
 
-1. Enum 上证明 approximant 的闭式与 AST
-2. 通过 operational adequacy 得到两边完整 stable-hitting witnesses
-3. coupling 两个公平 stable-head measures，再进入 `≈ₚ`
+1. `von_neumann_third_almost_surely_terminates`：迭代极限总质量为 $1$
+2. `operational_von_neumann_raw_ast`：构造左侧完整 stable-hitting witness
+3. `operational_vn_direct_ast`：构造右侧一步公平 witness
+4. `operational_vn_raw_heads_lift`：以 `eq` coupling 两个 head measures
+5. `probabilistic_eutt_of_hitting_lift`：由上述三项进入 gfp
 
-#v(10pt)
+#v(5pt)
 
-#theorem[
-  `von_neumann_third_equivalent_to_fair`
-]
+结论比“两个返回分布相同”更强：它是 canonical behavioral relation
+中的 theorem，可直接被 bind、iter 与交互上下文复用。
 
 #src[
 - `../theories/Examples/VonNeumannUnbounded.v`.
@@ -722,7 +934,7 @@ $
 
 == 偏置源硬币可以构造目标 q 硬币
 
-#set text(size: 20pt)
+#set text(size: 18pt)
 
 #align(center)[
   #flow-node[非退化偏置源硬币　$arrow.r$　Von Neumann 公平 bit stream]
@@ -732,13 +944,31 @@ $
   #flow-node[`direct_q`：一次 Bernoulli($q$) 采样]
 ]
 
-#v(5pt)
+#v(4pt)
 
-维护中的 concrete theorem：
+generic theorem 的前提是：源概率归一化且非退化，目标有理数满足
+$0 <= q <= 1$；此外 backend 提供 step/rational support laws。
 
-#align(center)[
-$ "third_to_two_fifths" approx_p "direct_two_fifths" $
+#src[
+- `../theories/Examples/BernoulliFactory.v`, generic construction.
 ]
+
+== Concrete factory theorem 比较完整程序行为
+
+#set text(size: 18pt)
+
+#theorem(title: [`probabilistic_eutt_third_to_two_fifths_direct`])[
+在 `OperationalFactoryStepSupportLaws(1/3,2/3)` 与
+`OperationalFactoryRationalSupportLaws(2/5)` 下：
+
+$ "third_to_two_fifths" approx_p "direct_two_fifths". $
+]
+
+#v(4pt)
+
+左侧定义为 `PTree.iter factory_binary_step (2/5)`；每一步所需公平 bit
+由前面的无界 Von Neumann extractor 产生。右侧仅含一次
+`Prob (Bernoulli 2/5)`。
 
 #src[
 - `../theories/Examples/BernoulliFactory.v`.
@@ -748,29 +978,36 @@ $ "third_to_two_fifths" approx_p "direct_two_fifths" $
 
 == 把 sampler 放回无限交互服务
 
-#set text(size: 20pt)
+#set text(size: 17pt)
 
-#align(center)[
-$
-  "Request" ;
-  underbrace("unbounded internal VN", "Tau + Prob") ;
-  "Reply"(b) ;
-  "repeat forever"
-$
+#panel[
+#mono[`serve_round sampler next :=`]
+
+#mono[`  Vis CoinRequest (fun _ =>`]
+
+#mono[`    bind sampler (fun b => Vis (CoinReply b) (fun _ => next))).`]
 ]
 
-#v(15pt)
+#v(6pt)
 
-两个 guarded `CoFixpoint` 服务：
+两个 guarded `CoFixpoint` 只替换 `sampler`：
 
 - `von_neumann_service`：每次请求后运行无界抽取器
 - `direct_fair_service`：每次请求后直接公平采样
 
-#v(10pt)
+#v(6pt)
 
-#theorem[
-  `interactive_von_neumann_service_equivalent`：两个无限服务满足 `≈ₚ`。
+#theorem(title: [`interactive_von_neumann_service_equivalent`])[
+  $ "von_neumann_service" approx_p "direct_fair_service". $
+
+  实例参数：$E="coin_serviceE"$，$M_N="Enum"$，
+  $M_F="FreeOmega Enum"$，$RR="eq"$。
 ]
+
+#v(4pt)
+
+证明使用 `probabilistic_eutt_coinduction_upto`；候选关系含 root pair 与
+两侧处理完 `CoinRequest` 后的 pair。
 
 #src[
 - `../theories/Examples/InteractiveVonNeumannService.v`, service definitions and equivalence theorem.
@@ -833,20 +1070,31 @@ selector list 构成 `finite_interaction_pattern`，表示 finite cylinder，而
 
 == Finite semantics 沿 stable heads 递归
 
-#set text(size: 20pt)
+#set text(size: 17pt)
 
-对 pattern $a :: tau$：
-
-1. 求程序的下一 stable-head measure
-2. `Ret` 或不匹配的 `Vis` 产生 `false`
-3. 匹配 `Vis e k` 时，使用 selector 给出的 $x$ 递归查询 $k(x)$ 与 $tau$
-4. 对 branch measure 做 bind，得到 `MF bool`
-
-#v(12pt)
+`finite_trace_query pattern t query : Prop` 是真正的递归定义：
 
 #panel[
-  continuation 义务只需对 stable-head measure #key[几乎处处]成立；零质量分支无需伪造证书。
+- 空 pattern：$"sem_eq"("query", delta_"true")$
+
+- `select :: rest`：存在 `out` 与 `branch`，满足
+
+$ H(t,"out") $
+
+$ "sem_ae"("out", h mapsto P(h)) $，其中
+
+$ P("FHRet" r) := "branch"("FHRet" r) equiv delta_"false" $
+
+$ P("FHVis"(e,k)) := "query"("rest",k(x),"branch"("FHVis"(e,k))) $
+若 `select e = Some x`；否则要求 $"branch"("FHVis"(e,k)) equiv delta_"false"$。
+
+$ "sem_eq"("sem_bind"("out","branch"), "query"). $
 ]
+
+#v(5pt)
+
+continuation 义务只对 `out` #key[几乎处处]成立；零质量 head 无需构造
+递归 query。这也是 definition 使用 `Prop` witness 而非直接递归函数的原因。
 
 #src[
 - `../theories/Eq/ProbabilisticTrace.v`, `finite_trace_query`.
@@ -854,29 +1102,35 @@ selector list 构成 `finite_interaction_pattern`，表示 finite cylinder，而
 
 == `≈ₚ` 对所有有限 cylinder 观察都可靠
 
-#set text(size: 20pt)
+#set text(size: 17pt)
 
-#align(center)[
+#theorem(title: [`finite_trace_query_exists`])[
+$ forall tau,t. exists q, "finite_trace_query"(tau,t,q). $
+]
+
+#v(4pt)
+
+#theorem(title: [`finite_trace_query_unique_up_to_coupling`])[
+$ "query"(tau,t,q_1) and "query"(tau,t,q_2)
+  arrow q_1 overline("eq") q_2. $
+]
+
+#v(4pt)
+
+#theorem(title: [`probabilistic_eutt_preserves_finite_interaction_sem`])[
 $
-  t_1 approx_p[RR] t_2
-  quad arrow.r.double.long quad
-  "sem_lift"("eq")(
-    chevron.l t_1 chevron.r_tau,
-    chevron.l t_2 chevron.r_tau)
+ t_1 approx_p[RR] t_2 arrow
+ "finite_interaction_sem"(tau,t_1)
+   overline("eq")
+ "finite_interaction_sem"(tau,t_2).
 $
 ]
 
-#v(15pt)
+#v(4pt)
 
-- 存在性：每一步使用完整 stable hitting
-- 唯一性：不同 query witnesses 在 semantic coupling 意义下相同
-- `finite_interaction_sem`：用 classical choice 包装一个 representative
-
-#v(10pt)
-
-#definition(title: [准确的 claim])[
-  `≈ₚ` is sound for every finite interactive cylinder observation.
-]
+`finite_interaction_sem τ t` 用 classical `epsilon` 选择一个满足 query 的
+representative。generic 层只声明它们可由 `eq` coupling；只有具备
+equality reflection 的 concrete backend 才进一步得到表示相等。
 
 #src[
 - `../theories/Eq/ProbabilisticTrace.v`, existence, uniqueness, and preservation theorems.
@@ -885,7 +1139,7 @@ $
 
 == 同一个 case study 得到真正的数值结论
 
-#set text(size: 22pt)
+#set text(size: 18pt)
 
 选择长度为 2 的 concrete pattern：
 
@@ -893,17 +1147,24 @@ $
 $ tau = ["Request"; "Reply"("true")] $
 ]
 
-#v(15pt)
+#v(7pt)
 
+#theorem(title: [`von_neumann_request_true_reply_trace_probability`])[
 #align(center)[
-#panel[
-  #text(size: 29pt)[
-  $ Pr_("von_neumann_service")[tau] = 1/2 $
-  ]
+  #text(size: 25pt)[$ Pr_t["von_neumann_service" mid tau] = 1/2 $]
 ]
 ]
 
-#v(14pt)
+#v(7pt)
+
+concrete Enum API 展开这个记号时要求存在：
+
+1. 一个 `finite_trace_query τ t query` witness
+2. 一个与 `query` 由 `eq` coupling 的 FreeOmega representative
+3. representative denotation 到某个 Enum distribution `out`
+4. `enum_expect bool_indicator out = 1/2`
+
+#v(5pt)
 
 这不是把整个无限服务求成 trace distribution；它是由同一个 stable-hitting 核导出的 finite prefix / cylinder probability。
 
