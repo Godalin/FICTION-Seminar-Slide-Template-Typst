@@ -23,7 +23,7 @@
 ]
 
 #show: seminar.with(
-  title: [PTree：概率事件计算的共归纳语义],
+  title: [PTree：概率交互的余归纳语义],
   subtitle: [Stable hitting、coupling 与无界弱互模拟],
   authors: (
     (name: "Linyu Yang", email: ""),
@@ -480,7 +480,7 @@ $
 
 #panel[
   因而这不是“只比较最终返回分布”的 sampler equivalence：
-  它会在每个相同的 dependent event 后继续共归纳比较。
+  它会在每个相同的 dependent event 后继续余归纳地比较。
 ]
 
 #src[
@@ -583,7 +583,7 @@ $
 非平凡点在两个方向：
 
 - 内部无界执行必须先证明极限存在、唯一并保留 AE support
-- 递归交互必须证明 coupling 与 continuation relation 可共归纳闭合
+- 递归交互必须证明 coupling 与 continuation relation 可在余归纳下闭合
 
 #v(8pt)
 
@@ -697,7 +697,7 @@ $
 - `../theories/Eq/OperationalProbabilisticPTSFreeOmegaInterp.v`.
 ]
 
-== 共归纳证明只需展示一个 post-fixed candidate
+== 余归纳证明只需展示一个 post-fixed candidate
 
 #set text(size: 18pt)
 
@@ -1013,7 +1013,7 @@ $ "third_to_two_fifths" approx_p "direct_two_fifths". $
 - `../theories/Examples/InteractiveVonNeumannService.v`, service definitions and equivalence theorem.
 ]
 
-== 这里的共归纳不是“两边刻意写成一样”
+== 这里的余归纳不是“两边刻意写成一样”
 
 #set text(size: 20pt)
 
@@ -1038,7 +1038,8 @@ $ "third_to_two_fifths" approx_p "direct_two_fifths". $
 
 #v(13pt)
 
-coinductive candidate 只对齐 observable guard；中间完全不同的随机执行由 stable hitting + coupling 消化。
+余归纳候选关系只对齐 observable guard；中间完全不同的随机执行由
+stable hitting + coupling 消化。
 
 #src[
 - `../theories/Examples/InteractiveVonNeumannService.v`.
@@ -1226,7 +1227,7 @@ concrete Enum API 展开这个记号时要求存在：
 
     stable hitting 提取下一个可见行为，
 
-    coupling 共归纳定义唯一的 `≈ₚ`，
+    coupling 余归纳地定义唯一的 `≈ₚ`，
 
     同一个语义再导出可测的 finite interaction observations。
   ]
@@ -1263,7 +1264,7 @@ concrete Enum API 展开这个记号时要求存在：
 #grid(columns: (1.2fr, 2.4fr), gutter: 10pt,
   [*Stable hitting*], [existence · uniqueness · increasing · AE preservation],
   [*Equivalence*], [refl · sym · trans · Ret · Tau · Vis · Prob · bind],
-  [*Corecursion*], [coinduction · up-to closure · up-to bind],
+  [*余归纳*], [基本余归纳 · up-to closure · up-to bind],
   [*Iteration*], [unfold · fusion · naturality · codiagonal],
   [*Interaction*], [translate · guarded Vis matching · interp under fusion],
   [*Quantitative*], [finite query existence · uniqueness · `≈ₚ` preservation],
