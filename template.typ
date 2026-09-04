@@ -50,6 +50,14 @@
     footer: [FICTION Seminar /
       #date / Zhejiang University],
 
+    // Use an absolute title size. Touying's default is 1.2em, which makes a
+    // slide title inherit the previous slide's local body-text size.
+    subslide-preamble: block(
+      below: 1.5em,
+      text(size: 30pt, weight: "bold",
+        utils.display-current-heading(level: 2)),
+    ),
+
     // freeze the theorem counter
     config-common(frozen-counters: (theorem-counter,)),
     // Preserve Touying's original title/body structure and title typography;
